@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Little Library — Track, Share & Lend Your Collection</title>
+  <meta name="description" content="Your cozy digital shelf for books, movies, and games. Scan barcodes, track your collection, and lend to friends with ease.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --amber: #f59e0b;
+      --amber-light: #fbbf24;
+      --amber-glow: #fde68a;
+      --teal: #0d9488;
+      --teal-light: #14b8a6;
+      --teal-dark: #0f766e;
+      --purple: #7c3aed;
+      --purple-light: #a78bfa;
+      --cream: #fffbeb;
+      --warm-white: #fefce8;
+      --wood: #92400e;
+      --wood-light: #b45309;
+      --wood-dark: #78350f;
+      --text: #1c1917;
+      --text-soft: #44403c;
+      --text-muted: #78716c;
+      --shelf-shadow: rgba(120, 53, 15, 0.3);
+      --radius: 16px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      color: var(--text);
+      background: var(--cream);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Baloo 2', cursive;
+      line-height: 1.15;
+    }
+
+    /* ============ NOISE TEXTURE ============ */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
+    }
+
+    /* ============ NAVIGATION ============ */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.4s ease;
+    }
+
+    nav.scrolled {
+      background: rgba(255, 251, 235, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .nav-logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--teal);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      transform: rotate(-3deg);
+      box-shadow: 0 3px 0 var(--teal-dark);
+    }
+
+    .nav-logo span {
+      font-family: 'Baloo 2', cursive;
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--wood-dark);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-soft);
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--teal); }
+
+    .nav-cta {
+      background: var(--teal) !important;
+      color: white !important;
+      padding: 10px 24px;
+      border-radius: 50px;
+      box-shadow: 0 3px 0 var(--teal-dark), 0 6px 20px rgba(13, 148, 136, 0.25);
+      transition: all 0.2s ease;
+      display: inline-block;
+    }
+
+    .nav-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 0 var(--teal-dark), 0 10px 30px rgba(13, 148, 136, 0.3);
+    }
+
+    .nav-cta:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--teal-dark);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    .mobile-menu-btn span {
+      display: block;
+      width: 24px;
+      height: 3px;
+      background: var(--text);
+      border-radius: 3px;
+      margin: 5px 0;
+      transition: all 0.3s;
+    }
+
+    /* ============ HERO ============ */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(251, 191, 36, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(13, 148, 136, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse 50% 40% at 10% 70%, rgba(124, 58, 237, 0.06) 0%, transparent 50%);
+    }
+
+    .hero-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 2px solid var(--amber-glow);
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--wood);
+      margin-bottom: 28px;
+      animation: float-in 0.8s ease-out both;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);
+    }
+
+    .hero-badge .sparkle { font-size: 1.1em; }
+
+    .hero h1 {
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      margin-bottom: 24px;
+      animation: float-in 0.8s ease-out 0.1s both;
+    }
+
+    .hero h1 .highlight {
+      position: relative;
+      display: inline-block;
+      color: var(--teal);
+    }
+
+    .hero h1 .highlight::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: -4px;
+      right: -4px;
+      height: 14px;
+      background: var(--amber-glow);
+      border-radius: 4px;
+      z-index: -1;
+      transform: rotate(-1deg);
+      opacity: 0.7;
+    }
+
+    .hero-sub {
+      font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+      color: var(--text-soft);
+      max-width: 600px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+      animation: float-in 0.8s ease-out 0.2s both;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      animation: float-in 0.8s ease-out 0.3s both;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--teal);
+      color: white;
+      padding: 16px 36px;
+      border-radius: 50px;
+      font-family: 'Baloo 2', cursive;
+      font-size: 1.15rem;
+      font-weight: 700;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 0 var(--teal-dark), 0 8px 25px rgba(13, 148, 136, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 7px 0 var(--teal-dark), 0 14px 35px rgba(13, 148, 136, 0.35);
+    }
+
+    .btn-primary:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--teal-dark);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: white;
+      color: var(--text);
+      padding: 16px 32px;
+      border-radius: 50px;
+      font-family: 'Baloo 2', cursive;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: 2px solid #e7e5e4;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--teal-light);
+      color: var(--teal);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    /* ============ BOOKSHELF SHOWCASE ============ */
+    .shelf-showcase {
+      margin-top: 72px;
+      animation: float-in 1s ease-out 0.5s both;
+    }
+
+    .bookshelf {
+      max-width: 700px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .shelf-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 6px;
+      padding: 0 20px 0;
+      min-height: 140px;
+    }
+
+    .book-spine {
+      width: clamp(28px, 5vw, 44px);
+      border-radius: 3px 5px 5px 3px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-origin: bottom center;
+    }
+
+    .book-spine:hover {
+      transform: translateY(-14px) rotate(-3deg);
+      z-index: 2;
+    }
+
+    .book-spine::after {
+      content: '';
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      left: 4px;
+      width: 2px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 1px;
+    }
+
+    .shelf-board {
+      height: 14px;
+      background: linear-gradient(180deg, #d97706, #b45309 40%, #92400e);
+      border-radius: 3px;
+      box-shadow:
+        0 4px 0 var(--wood-dark),
+        0 6px 15px var(--shelf-shadow),
+        inset 0 2px 0 rgba(255,255,255,0.15);
+      margin: 0 8px;
+    }
+
+    .shelf-board-shadow {
+      height: 20px;
+      background: linear-gradient(180deg, rgba(120, 53, 15, 0.15), transparent);
+      margin: 0 16px;
+    }
+
+    /* ============ FLOATING ELEMENTS ============ */
+    .float-element {
+      position: absolute;
+      pointer-events: none;
+      animation: gentle-float 6s ease-in-out infinite;
+    }
+
+    .float-element:nth-child(odd) { animation-delay: -3s; }
+
+    @keyframes gentle-float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-15px) rotate(3deg); }
+    }
+
+    /* ============ FEATURES SECTION ============ */
+    .features {
+      padding: 100px 24px 120px;
+      position: relative;
+    }
+
+    .features::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      background: linear-gradient(180deg, var(--cream), transparent);
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 650px;
+      margin: 0 auto 72px;
+    }
+
+    .section-tag {
+      display: inline-block;
+      font-family: 'Baloo 2', cursive;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--amber);
+      margin-bottom: 12px;
+    }
+
+    .section-header h2 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .section-header p {
+      font-size: 1.1rem;
+      color: var(--text-soft);
+      line-height: 1.7;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 28px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 36px 28px;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+      border-color: var(--amber-glow);
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+
+    .feature-card:nth-child(1)::before { background: var(--amber); }
+    .feature-card:nth-child(2)::before { background: var(--teal); }
+    .feature-card:nth-child(3)::before { background: var(--purple); }
+    .feature-card:nth-child(4)::before { background: var(--amber); }
+    .feature-card:nth-child(5)::before { background: var(--teal); }
+    .feature-card:nth-child(6)::before { background: var(--purple); }
+
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .feature-card:nth-child(1) .feature-icon { background: #fef3c7; }
+    .feature-card:nth-child(2) .feature-icon { background: #ccfbf1; }
+    .feature-card:nth-child(3) .feature-icon { background: #ede9fe; }
+    .feature-card:nth-child(4) .feature-icon { background: #fef3c7; }
+    .feature-card:nth-child(5) .feature-icon { background: #ccfbf1; }
+    .feature-card:nth-child(6) .feature-icon { background: #ede9fe; }
+
+    .feature-card h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .feature-card p {
+      color: var(--text-soft);
+      line-height: 1.65;
+      font-size: 0.95rem;
+    }
+
+    /* ============ HOW IT WORKS ============ */
+    .how-it-works {
+      padding: 100px 24px;
+      background:
+        linear-gradient(135deg, rgba(13, 148, 136, 0.04) 0%, transparent 50%),
+        linear-gradient(225deg, rgba(124, 58, 237, 0.03) 0%, transparent 50%),
+        white;
+    }
+
+    .steps {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      padding: 40px 0;
+      position: relative;
+    }
+
+    .step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 36px;
+      top: 90px;
+      bottom: -10px;
+      width: 3px;
+      background: repeating-linear-gradient(
+        180deg,
+        var(--amber-glow) 0,
+        var(--amber-glow) 8px,
+        transparent 8px,
+        transparent 16px
+      );
+    }
+
+    .step-number {
+      width: 72px;
+      height: 72px;
+      min-width: 72px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Baloo 2', cursive;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: white;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step:nth-child(1) .step-number {
+      background: var(--amber);
+      box-shadow: 0 4px 0 #d97706, 0 6px 20px rgba(245, 158, 11, 0.3);
+      transform: rotate(-3deg);
+    }
+    .step:nth-child(2) .step-number {
+      background: var(--teal);
+      box-shadow: 0 4px 0 var(--teal-dark), 0 6px 20px rgba(13, 148, 136, 0.3);
+      transform: rotate(2deg);
+    }
+    .step:nth-child(3) .step-number {
+      background: var(--purple);
+      box-shadow: 0 4px 0 #6d28d9, 0 6px 20px rgba(124, 58, 237, 0.3);
+      transform: rotate(-2deg);
+    }
+
+    .step-content h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .step-content p {
+      color: var(--text-soft);
+      line-height: 1.65;
+      font-size: 1.05rem;
+    }
+
+    /* ============ SOCIAL PROOF / STATS ============ */
+    .stats-section {
+      padding: 80px 24px;
+      background: var(--cream);
+    }
+
+    .stats-grid {
+      max-width: 800px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 32px 20px;
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      border: 2px solid #f5f5f4;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px) rotate(-1deg);
+      border-color: var(--amber-glow);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+    }
+
+    .stat-emoji {
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+    }
+
+    .stat-number {
+      font-family: 'Baloo 2', cursive;
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--teal);
+      line-height: 1.1;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* ============ MEDIA TYPES ============ */
+    .media-types {
+      padding: 100px 24px;
+      background: white;
+    }
+
+    .media-grid {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+
+    .media-card {
+      text-align: center;
+      padding: 48px 24px;
+      border-radius: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: default;
+    }
+
+    .media-card:hover {
+      transform: translateY(-8px) scale(1.02);
+    }
+
+    .media-card:nth-child(1) {
+      background: linear-gradient(145deg, #fef3c7, #fde68a);
+      box-shadow: 0 8px 30px rgba(245, 158, 11, 0.15);
+    }
+    .media-card:nth-child(2) {
+      background: linear-gradient(145deg, #ccfbf1, #99f6e4);
+      box-shadow: 0 8px 30px rgba(13, 148, 136, 0.15);
+    }
+    .media-card:nth-child(3) {
+      background: linear-gradient(145deg, #ede9fe, #ddd6fe);
+      box-shadow: 0 8px 30px rgba(124, 58, 237, 0.15);
+    }
+
+    .media-card-icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+      display: block;
+      animation: wiggle 3s ease-in-out infinite;
+    }
+
+    .media-card:nth-child(2) .media-card-icon { animation-delay: -1s; }
+    .media-card:nth-child(3) .media-card-icon { animation-delay: -2s; }
+
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-5deg); }
+      75% { transform: rotate(5deg); }
+    }
+
+    .media-card h3 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .media-card p {
+      font-size: 0.9rem;
+      color: var(--text-soft);
+      line-height: 1.6;
+    }
+
+    /* ============ CTA SECTION ============ */
+    .cta-section {
+      padding: 120px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 100%, rgba(13, 148, 136, 0.08) 0%, transparent 60%),
+        var(--cream);
+    }
+
+    .cta-section h2 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .cta-section p {
+      font-size: 1.15rem;
+      color: var(--text-soft);
+      max-width: 500px;
+      margin: 0 auto 36px;
+      line-height: 1.7;
+    }
+
+    .cta-shelf {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 4px;
+      margin-top: 60px;
+      opacity: 0.35;
+    }
+
+    .cta-shelf .book-spine {
+      cursor: default;
+    }
+
+    .cta-shelf .book-spine:hover {
+      transform: none;
+    }
+
+    /* ============ FOOTER ============ */
+    footer {
+      padding: 48px 24px;
+      text-align: center;
+      border-top: 2px solid #f5f5f4;
+      background: white;
+    }
+
+    .footer-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .footer-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--teal);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transform: rotate(-3deg);
+    }
+
+    .footer-logo span {
+      font-family: 'Baloo 2', cursive;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--wood-dark);
+    }
+
+    footer p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--teal);
+      text-decoration: none;
+    }
+
+    /* ============ ANIMATIONS ============ */
+    @keyframes float-in {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .mobile-menu-btn { display: block; }
+
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 16px;
+        right: 16px;
+        background: white;
+        padding: 24px;
+        border-radius: var(--radius);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        gap: 20px;
+      }
+
+      .hero { padding-top: 100px; min-height: auto; padding-bottom: 60px; }
+
+      .step { flex-direction: column; text-align: center; gap: 20px; }
+      .step:not(:last-child)::after { display: none; }
+
+      .stats-grid { grid-template-columns: 1fr; max-width: 300px; }
+
+      .media-grid { grid-template-columns: 1fr; max-width: 340px; margin: 0 auto; }
+
+      .shelf-row { gap: 4px; padding: 0 8px; }
+      .book-spine { width: clamp(22px, 7vw, 36px); }
+    }
+
+    @media (max-width: 480px) {
+      .hero-actions { flex-direction: column; }
+      .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">📚</div>
+      <span>My Little Library</span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#collections">Collections</a></li>
+      <li><a href="https://mylittlelibrary.net" class="nav-cta">Open App</a></li>
+    </ul>
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <span class="sparkle">✨</span> Free &amp; fun for collectors
+      </div>
+      <h1>
+        Your cozy digital<br>
+        <span class="highlight">little library</span>
+      </h1>
+      <p class="hero-sub">
+        Track every book, movie, and game you own. Scan barcodes to add items in seconds, then share and lend with friends — all from one cheerful little app.
+      </p>
+      <div class="hero-actions">
+        <a href="https://mylittlelibrary.net" class="btn-primary">
+          Start Your Library →
+        </a>
+        <a href="#features" class="btn-secondary">
+          See how it works
+        </a>
+      </div>
+
+      <!-- Decorative Bookshelf -->
+      <div class="shelf-showcase">
+        <div class="bookshelf">
+          <div class="shelf-row" id="shelfRow"></div>
+          <div class="shelf-board"></div>
+          <div class="shelf-board-shadow"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="section-header reveal">
+      <span class="section-tag">✦ Features</span>
+      <h2>Everything you need to manage your stuff</h2>
+      <p>No complicated setup, no bloated software. Just a simple, delightful way to know what you own and who's borrowing it.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon">📸</div>
+        <h3>Barcode Scanning</h3>
+        <p>Point your camera at any barcode and instantly add books, movies, or games. Cover art and details are pulled in automatically.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon">📖</div>
+        <h3>Smart Catalog</h3>
+        <p>Your collection, beautifully organized. Filter by type, status, tags, or search for anything. Rate and review as you go.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon">🤝</div>
+        <h3>Friend Lending</h3>
+        <p>Lend items to friends and always know what's out. Request to borrow from their collections too — no more forgotten loans.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-4">
+        <div class="feature-icon">👯</div>
+        <h3>Friend Codes</h3>
+        <p>Add friends with a simple code — no need to share emails or phone numbers. Quick, private, and easy.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-5">
+        <div class="feature-icon">🔔</div>
+        <h3>Real-time Notifications</h3>
+        <p>Get instant alerts when someone requests a loan, accepts a friend invite, or returns your stuff. Never miss a thing.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-5">
+        <div class="feature-icon">🏷️</div>
+        <h3>Tags & Status</h3>
+        <p>Mark items as owned, in-progress, completed, or on your backlog. Add custom color-coded tags to sort your way.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how-it-works" id="how">
+    <div class="section-header reveal">
+      <span class="section-tag">✦ How It Works</span>
+      <h2>Three steps to a tidy collection</h2>
+      <p>Getting started takes about 30 seconds. Seriously.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Sign in with Google</h3>
+          <p>One tap and you're in. No forms to fill out, no passwords to remember. Your account is set up and ready to go instantly.</p>
+        </div>
+      </div>
+      <div class="step reveal reveal-delay-1">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Scan your stuff</h3>
+          <p>Grab a book off the shelf and scan its barcode. We'll look up the title, author, cover art, and all the details. Bulk-scan mode lets you rip through a whole shelf in minutes.</p>
+        </div>
+      </div>
+      <div class="step reveal reveal-delay-2">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Share with friends</h3>
+          <p>Send your friend code to people you trust. Browse each other's collections, request loans, and keep track of everything in one place.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-card reveal">
+        <div class="stat-emoji">📚</div>
+        <div class="stat-number">3</div>
+        <div class="stat-label">Media types supported</div>
+      </div>
+      <div class="stat-card reveal reveal-delay-1">
+        <div class="stat-emoji">⚡</div>
+        <div class="stat-number">&lt;2s</div>
+        <div class="stat-label">To add via barcode</div>
+      </div>
+      <div class="stat-card reveal reveal-delay-2">
+        <div class="stat-emoji">💸</div>
+        <div class="stat-number">Free</div>
+        <div class="stat-label">Forever, no catch</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEDIA TYPES -->
+  <section class="media-types" id="collections">
+    <div class="section-header reveal">
+      <span class="section-tag">✦ Collections</span>
+      <h2>One app for all your favorites</h2>
+      <p>Books, movies, and games — all in one cozy place.</p>
+    </div>
+
+    <div class="media-grid">
+      <div class="media-card reveal">
+        <span class="media-card-icon">📖</span>
+        <h3>Books</h3>
+        <p>Powered by Open Library. Scan any ISBN and get full metadata plus cover art.</p>
+      </div>
+      <div class="media-card reveal reveal-delay-1">
+        <span class="media-card-icon">🎬</span>
+        <h3>Movies</h3>
+        <p>Backed by TMDB. Find any film by barcode or title and see posters, ratings, and more.</p>
+      </div>
+      <div class="media-card reveal reveal-delay-2">
+        <span class="media-card-icon">🎮</span>
+        <h3>Games</h3>
+        <p>Linked to IGDB. Add your video game collection with cover art and platform details.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="reveal">
+      <h2>Ready to shelve it?</h2>
+      <p>Join and start cataloging your books, movies, and games in seconds. It's free — forever.</p>
+      <a href="https://mylittlelibrary.net" class="btn-primary">
+        Open My Little Library →
+      </a>
+    </div>
+    <div class="cta-shelf" aria-hidden="true" id="ctaShelf"></div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">
+      <div class="footer-logo-icon">📚</div>
+      <span>My Little Library</span>
+    </div>
+    <p>Made with care for collectors everywhere. <a href="https://mylittlelibrary.net">mylittlelibrary.net</a></p>
+  </footer>
+
+  <script>
+    // ---- Bookshelf generator ----
+    const bookColors = [
+      '#dc2626','#ea580c','#d97706','#ca8a04','#65a30d','#16a34a',
+      '#0d9488','#0891b2','#2563eb','#4f46e5','#7c3aed','#9333ea',
+      '#c026d3','#db2777','#e11d48','#78350f','#92400e','#1e3a5f',
+      '#334155','#be123c','#7e22ce','#0e7490'
+    ];
+
+    function makeSpine() {
+      const div = document.createElement('div');
+      div.className = 'book-spine';
+      const h = 80 + Math.random() * 80;
+      const color = bookColors[Math.floor(Math.random() * bookColors.length)];
+      div.style.height = h + 'px';
+      div.style.background = `linear-gradient(135deg, ${color}, ${adjustColor(color, -30)})`;
+      div.style.transform = `rotate(${(Math.random() - 0.5) * 3}deg)`;
+      return div;
+    }
+
+    function adjustColor(hex, amount) {
+      const num = parseInt(hex.slice(1), 16);
+      const r = Math.min(255, Math.max(0, (num >> 16) + amount));
+      const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + amount));
+      const b = Math.min(255, Math.max(0, (num & 0xff) + amount));
+      return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+    }
+
+    // Hero shelf
+    const shelfRow = document.getElementById('shelfRow');
+    const count = window.innerWidth < 480 ? 10 : window.innerWidth < 768 ? 14 : 18;
+    for (let i = 0; i < count; i++) shelfRow.appendChild(makeSpine());
+
+    // CTA shelf
+    const ctaShelf = document.getElementById('ctaShelf');
+    for (let i = 0; i < 24; i++) ctaShelf.appendChild(makeSpine());
+
+    // ---- Scroll reveal ----
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // ---- Nav scroll ----
+    window.addEventListener('scroll', () => {
+      document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // ---- Mobile menu ----
+    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('open');
+    });
+
+    // Close menu on link click
+    document.querySelectorAll('#navLinks a').forEach(a => {
+      a.addEventListener('click', () => {
+        document.getElementById('navLinks').classList.remove('open');
+      });
+    });
+  </script>
+</body>
+</html>
